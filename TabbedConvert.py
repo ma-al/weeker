@@ -91,7 +91,11 @@ class TabbedConvert:
         return '\n'.join(s) 
         
 
-    def week_to_file(self, fn, week):
+    def week_to_file(self, fn, week, reverse=True):
+        #reverse order of days in week
+        if reverse:
+            week.reverse()
+        
         with open(fn, 'w') as f:
             f.write('```\n')
             for day in week:
@@ -102,7 +106,7 @@ class TabbedConvert:
 
     def data_to_files(self):
         weeks = self.data
-        
+
         for idx, week in enumerate(weeks):
             fn = './{}-{}-{}.txt'.format(
                 self.month, self.month_abbr.lower(), idx)
@@ -175,7 +179,7 @@ class TabbedConvert:
 if __name__=='__main__':
 
     print
-    tc = TabbedConvert('./csv/2017-02.csv')
+    tc = TabbedConvert('./csv/2017-01.csv')
     #tc.show_data()
 
 
