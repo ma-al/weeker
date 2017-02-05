@@ -2,7 +2,9 @@ import os
 import json
 import datetime
 import calendar
+import argparse
 
+section = lambda msg : '\n{:=>80}'.format(' [ {} ]'.format(msg))
 
 class TabbedConvert:
     """
@@ -19,37 +21,48 @@ class TabbedConvert:
     month_abbr = None
 
 
-    def __init__(self, file_name):
+    def show_args(self, args):
+        print
+        for key, val in vars(args).iteritems():
+            print '{:>6} : {}'.format(key, val) 
+
+    def __init__(self):
+        args = self.args = self.get_args()
+        self.show_args(args)
         
-        self.csv = os.path.abspath(file_name)
-        print 'Input File: {}'.format(self.csv)
+        print section('Ingestion')
+        print 'Input File: {}'.format(args.csv.name)
+        self.data = self.ingestion(args.csv)
+        print 'Ingested {} lines'.format(len(self.data))
+        args.csv.close()
 
-        print
-        print 'Ingesting...'
-        with open(self.csv, 'r') as f:
-            for l in f:
-                self.clean_line(l)
-
-        print
-        print 'Checking...'
+        print section('Checking')
         self.check_data()
         
-        print
-        print 'Extract Meta...'
+        print section('Extracting Metadata')
         self.row_head = self.data.pop(0)
         self.get_meta()
        
-        print
-        print 'Partitioning...'
+        print section('Partitioning')
         self.partition_data()
-        
-        print
-        print 'Printing...'
-        self.data_to_files()
+        self.show_partitions()
 
-        #self.show_data()
-    
-    
+        if args.save:
+            print section('Saving To File')
+            self.data_to_files()
+ 
+
+    def get_args(self):
+        pars = argparse.ArgumentParser()
+
+        pars.add_argument('-s', '--save', action='store_true', 
+                          help='Save all output to files')
+        pars.add_argument('csv', metavar='input_csv',
+                          type=argparse.FileType('r'),
+                          help='The tabbed CSV file you want converted')
+
+        return pars.parse_args()
+
     def get_meta(self):
         m = self.row_head[0]
         lm = list(calendar.month_name)
@@ -70,10 +83,8 @@ class TabbedConvert:
         print self.month_abbr
         print self.stype
 
-
     def time_as_string(self, key, val):
         return '{} {}'.format(key.rjust(7, ' '), str(val).rjust(2, '0'))
-
     
     def stringify_day(self, day):
         s = []
@@ -87,9 +98,8 @@ class TabbedConvert:
 
         for idx, val in enumerate(day[2:]):
             s.append(self.time_as_string(self.stype[idx], val))
-      
-        return '\n'.join(s) 
-        
+
+        return '\n'.join(s)
 
     def week_to_file(self, fn, week, reverse=True):
         #reverse order of days in week
@@ -103,7 +113,6 @@ class TabbedConvert:
                 f.write(s + '\n')
             f.write('```\n')
 
-
     def data_to_files(self):
         weeks = self.data
 
@@ -112,7 +121,6 @@ class TabbedConvert:
                 self.month, self.month_abbr.lower(), idx)
             self.week_to_file(fn, week)
             print 'Saved ({})'.format(fn)
-
 
     def partition_data(self):
         weeks = []
@@ -128,15 +136,15 @@ class TabbedConvert:
 
         if len(week) > 0:
             weeks.append(week)
-        
-        for w in weeks:
-            print
-            for d in w:
-                print d
-        
+ 
         self.data = weeks
 
-
+    def show_partitions(self):
+        for week in self.data:
+            print
+            for day in week:
+                print day
+    
     def check_data(self):
         data = self.data
         if len(data) is 0:
@@ -150,38 +158,27 @@ class TabbedConvert:
         print 'Month: {}'.format(month)
         print 'Number of days: {}'.format(len(data) - 1)
 
+    def ingestion(self, open_file):
+        data = []
+        for line in open_file:
+            # get rid of newline and intertabs
+            toks = line.rstrip().split('\t')
 
-    def clean_line(self, l):
-        # get rid of newline and intertabs
-        l = l.rstrip()
-        lst = l.split('\t')
+            # needs 9 items in list
+            if len(toks) is not 9:
+                print 'Discarded ({}). Too short.'.format(toks)
+                continue
 
-        # needs 9 items in list
-        if len(lst) is not 9:
-            print 'Discarded ({}). Too short.'.format(lst)
-            return
+            # get rid of 2nd item
+            toks.pop(1)
+            data.append(toks)
 
-        # get rid of 2nd item
-        lst.pop(1)
-        
-        # save it
-        self.data.append(lst)
-
+        return data
 
     def show_data(self):
         for d in self.data:
             print d, len(d), type(d)
 
 
-
-
-
 if __name__=='__main__':
-
-    print
-    tc = TabbedConvert('./csv/2017-01.csv')
-    #tc.show_data()
-
-
-
-
+    TabbedConvert()
