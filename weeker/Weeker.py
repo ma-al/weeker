@@ -4,7 +4,8 @@ import datetime
 import calendar
 import argparse
 
-section = lambda msg : '\n{:=>80}'.format(' [ {} ]'.format(msg))
+section = lambda msg: '\n{:=>80}'.format(' [ {} ]'.format(msg))
+
 
 class Weeker:
     """
@@ -24,27 +25,32 @@ class Weeker:
     def show_args(self, args):
         print
         for key, val in vars(args).iteritems():
-            print '{:>6} : {}'.format(key, val) 
+            print '{:>6} : {}'.format(key, val)
 
     def __init__(self):
         self._args = self.get_args()
         self.show_args(self._args)
- 
+
     def get_args(self):
         pars = argparse.ArgumentParser()
 
-        pars.add_argument('-s', '--save', action='store_true', 
-                          help='Save all output to files')
-        pars.add_argument('csv', metavar='input_csv',
-                          type=argparse.FileType('r'),
-                          help='The tabbed CSV file you want converted')
+        pars.add_argument(
+            '-s',
+            '--save',
+            action='store_true',
+            help='Save all output to files')
+        pars.add_argument(
+            'csv',
+            metavar='input_csv',
+            type=argparse.FileType('r'),
+            help='The tabbed CSV file you want converted')
 
         return pars.parse_args()
 
     def get_meta(self):
         m = self.row_head[0]
         lm = list(calendar.month_name)
-       
+
         if m not in lm:
             raise RuntimeError('Weird month! ({})'.format(m))
 
@@ -56,17 +62,17 @@ class Weeker:
 
         self.month_name = calendar.month_name[self.month]
         self.month_abbr = calendar.month_abbr[self.month]
-        
+
         print self.month_name
         print self.month_abbr
         print self.stype
 
     def time_as_string(self, key, val):
         return '{} {}'.format(key.rjust(7, ' '), str(val).rjust(2, '0'))
-    
+
     def stringify_day(self, day):
         s = []
-        
+
         date = str(day[0]).rjust(2, '0')
         dayw = day[1]
 
@@ -83,7 +89,7 @@ class Weeker:
         #reverse order of days in week
         if reverse:
             week.reverse()
-        
+
         with open(fn, 'w') as f:
             f.write('```\n')
             for day in week:
@@ -95,8 +101,7 @@ class Weeker:
         weeks = self.data
 
         for idx, week in enumerate(weeks):
-            fn = '{}-{}-{}.txt'.format(self.month, 
-                                       self.month_abbr.lower(),
+            fn = '{}-{}-{}.txt'.format(self.month, self.month_abbr.lower(),
                                        idx)
             file_path = os.path.join(self._out_dir, fn)
             self.week_to_file(file_path, week)
@@ -111,12 +116,12 @@ class Weeker:
             if day == calendar.day_abbr[calendar.MONDAY]:
                 weeks.append(week)
                 week = []
-            
+
             week.append(line)
 
         if len(week) > 0:
             weeks.append(week)
- 
+
         self.data = weeks
 
     def show_partitions(self):
@@ -124,7 +129,7 @@ class Weeker:
             print
             for day in week:
                 print day
-    
+
     def check_data(self):
         data = self.data
         if len(data) is 0:
@@ -134,7 +139,7 @@ class Weeker:
         month = data[0][0]
         if month not in calendar.month_name:
             raise RuntimeError('Can\'t detect the month')
-        
+
         print 'Month: {}'.format(month)
         print 'Number of days: {}'.format(len(data) - 1)
 
@@ -170,11 +175,11 @@ class Weeker:
 
         print section('Checking')
         self.check_data()
-        
+
         print section('Extracting Metadata')
         self.row_head = self.data.pop(0)
         self.get_meta()
-       
+
         print section('Partitioning')
         self.partition_data()
         self.show_partitions()
@@ -184,5 +189,5 @@ class Weeker:
             self.data_to_files()
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     Weeker().run_it()
