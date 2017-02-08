@@ -6,11 +6,10 @@ import argparse
 
 section = lambda msg : '\n{:=>80}'.format(' [ {} ]'.format(msg))
 
-class TabbedConvert:
+class Weeker:
     """
     Converts a "CSV" that is tabbed into list of lists
     """
-   
     csv = None
     data = []
     row_head = None
@@ -20,6 +19,7 @@ class TabbedConvert:
     month_name = None
     month_abbr = None
 
+    _out_dir = './output'
 
     def show_args(self, args):
         print
@@ -27,31 +27,9 @@ class TabbedConvert:
             print '{:>6} : {}'.format(key, val) 
 
     def __init__(self):
-        args = self.args = self.get_args()
-        self.show_args(args)
-        
-        print section('Ingestion')
-        print 'Input File: {}'.format(args.csv.name)
-        self.data = self.ingestion(args.csv)
-        print 'Ingested {} lines'.format(len(self.data))
-        args.csv.close()
-
-        print section('Checking')
-        self.check_data()
-        
-        print section('Extracting Metadata')
-        self.row_head = self.data.pop(0)
-        self.get_meta()
-       
-        print section('Partitioning')
-        self.partition_data()
-        self.show_partitions()
-
-        if args.save:
-            print section('Saving To File')
-            self.data_to_files()
+        self._args = self.get_args()
+        self.show_args(self._args)
  
-
     def get_args(self):
         pars = argparse.ArgumentParser()
 
@@ -117,10 +95,12 @@ class TabbedConvert:
         weeks = self.data
 
         for idx, week in enumerate(weeks):
-            fn = './{}-{}-{}.txt'.format(
-                self.month, self.month_abbr.lower(), idx)
-            self.week_to_file(fn, week)
-            print 'Saved ({})'.format(fn)
+            fn = '{}-{}-{}.txt'.format(self.month, 
+                                       self.month_abbr.lower(),
+                                       idx)
+            file_path = os.path.join(self._out_dir, fn)
+            self.week_to_file(file_path, week)
+            print 'Saved', file_path
 
     def partition_data(self):
         weeks = []
@@ -179,6 +159,30 @@ class TabbedConvert:
         for d in self.data:
             print d, len(d), type(d)
 
+    def run_it(self):
+        args = self._args
+
+        print section('Ingestion')
+        print 'Input File: {}'.format(args.csv.name)
+        self.data = self.ingestion(args.csv)
+        print 'Ingested {} lines'.format(len(self.data))
+        args.csv.close()
+
+        print section('Checking')
+        self.check_data()
+        
+        print section('Extracting Metadata')
+        self.row_head = self.data.pop(0)
+        self.get_meta()
+       
+        print section('Partitioning')
+        self.partition_data()
+        self.show_partitions()
+
+        if args.save:
+            print section('Saving To File')
+            self.data_to_files()
+
 
 if __name__=='__main__':
-    TabbedConvert()
+    Weeker().run_it()
