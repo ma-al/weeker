@@ -14,9 +14,9 @@ script:
     - pylint weeker
 
 # Coming soon...
-#    - coverage run --source snoil -m py.test -vs
+#    - coverage run --source weeker -m py.test -vs
 #    - coverage report -m
-#    - flake8 snoil --count
+#    - flake8 weeker --count
 
 branches:
     only:
