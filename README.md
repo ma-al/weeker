@@ -1,2 +1,3 @@
-# tabbed-converter
-Converts a tabbed CSV file into list of lists (chunked into weeks)
+Description
+===========
+Converts a tabbed CSV file into list of lists chunked by weeks.
