@@ -1,39 +1,30 @@
+"""Converts a tabbed CSV into week-separated representation and files."""
+
 import os
-import json
-import datetime
 import calendar
 import argparse
 
-section = lambda msg: '\n{:=>80}'.format(' [ {} ]'.format(msg))
 
-
-class Weeker:
-    """
-    Converts a "CSV" that is tabbed into list of lists
-    """
-    csv = None
-    data = []
-    row_head = None
-
-    stype = []
-    month = 0
-    month_name = None
-    month_abbr = None
+class Weeker(object):
+    """Converts a "CSV" that is tabbed into list of lists"""
 
     _out_dir = './output'
 
-    def show_args(self, args):
+    def __init__(self):
+        """Initializes the class via parsed program arguments."""
+        self._month = 0
+        self._etype = []
+        self._data = []
+        self._row_head = None
+
+        self.parse_arguments()
         print
-        for key, val in vars(args).iteritems():
+        for key, val in vars(self._args).iteritems():
             print '{:>6} : {}'.format(key, val)
 
-    def __init__(self):
-        self._args = self.get_args()
-        self.show_args(self._args)
-
-    def get_args(self):
+    def parse_arguments(self):
+        """Get and parse the program arguments."""
         pars = argparse.ArgumentParser()
-
         pars.add_argument(
             '-s',
             '--save',
@@ -45,73 +36,88 @@ class Weeker:
             type=argparse.FileType('r'),
             help='The tabbed CSV file you want converted')
 
-        return pars.parse_args()
+        self._args = pars.parse_args()
 
     def get_meta(self):
-        m = self.row_head[0]
-        lm = list(calendar.month_name)
+        """Extract metadata from the read file."""
+        month = self._row_head[0]
+        month_lst = list(calendar.month_name)
 
-        if m not in lm:
-            raise RuntimeError('Weird month! ({})'.format(m))
+        if month not in month_lst:
+            raise RuntimeError('Weird month! ({})'.format(month))
 
-        self.month = lm.index(m)
-        self.stype = self.row_head[2:]
+        self._month = month_lst.index(month)
+        self._etype = self._row_head[2:]
 
-        if len(self.stype) != 6:
-            raise RuntimeError('Wrong headers! ({})'.format(self.stype))
+        if len(self._etype) != 6:
+            raise RuntimeError('Wrong headers! ({})'.format(self._etype))
 
-        self.month_name = calendar.month_name[self.month]
-        self.month_abbr = calendar.month_abbr[self.month]
-
-        print self.month_name
-        print self.month_abbr
-        print self.stype
-
-    def time_as_string(self, key, val):
-        return '{} {}'.format(key.rjust(7, ' '), str(val).rjust(2, '0'))
+        print calendar.month_name[self._month]
+        print calendar.month_abbr[self._month]
+        print self._etype
 
     def stringify_day(self, day):
-        s = []
+        """
+        Format the given day.
+
+        E.g., Changes ['01', 'Wed', '06:32 AM', '12:00 PM', '08:35 PM'] into
+        ---------- Wed, Feb 01
+        Sunrise 06:32 AM
+           Noon 12:00 PM
+         Sunset 08:35 PM
+
+        :param list day: Day data as a list of strings
+        :return: Formatted newline-separated string
+        :rtype: str
+        """
+        event = lambda e, t: '{} {}'.format(e.rjust(7, ' '), t)
+        out = [event(self._etype[i], v) for i, v in enumerate(day[2:])]
 
         date = str(day[0]).rjust(2, '0')
         dayw = day[1]
+        abbr = calendar.month_abbr[self._month]
+        separator = ' {}, {} {}'.format(dayw, abbr, date).rjust(24, '-')
 
-        right = ' {}, {} {}'.format(dayw, self.month_abbr, date)
-        right = right.rjust(24, '-')
-        s.append(right)
+        out.insert(0, separator)
+        return '\n'.join(out)
 
-        for idx, val in enumerate(day[2:]):
-            s.append(self.time_as_string(self.stype[idx], val))
+    def week_to_file(self, fpath, week, reverse=True):
+        """
+        Write a whole week of data into a file.
 
-        return '\n'.join(s)
-
-    def week_to_file(self, fn, week, reverse=True):
+        :param str fpath: File path to save to
+        :param list week: List of day data for the week
+        :param bool reverse: True if you want to reverse the order of days
+        """
         #reverse order of days in week
         if reverse:
             week.reverse()
 
-        with open(fn, 'w') as f:
-            f.write('```\n')
+        with open(fpath, 'w') as open_file:
+            open_file.write('```\n')
             for day in week:
-                s = self.stringify_day(day)
-                f.write(s + '\n')
-            f.write('```\n')
+                day_str = self.stringify_day(day)
+                open_file.write(day_str + '\n')
+            open_file.write('```\n')
 
     def data_to_files(self):
-        weeks = self.data
+        """Write all data to week-separated files."""
+        weeks = self._data
+        month = self._month
+        mabbr = calendar.month_abbr[self._month].lower()
 
         for idx, week in enumerate(weeks):
-            fn = '{}-{}-{}.txt'.format(self.month, self.month_abbr.lower(),
-                                       idx)
-            file_path = os.path.join(self._out_dir, fn)
-            self.week_to_file(file_path, week)
-            print 'Saved', file_path
+            fname = '{}-{}-{}.txt'.format(month, mabbr, idx)
+            fpath = os.path.join(self._out_dir, fname)
+            self.week_to_file(fpath, week)
+            print 'Saved', fpath
 
     def partition_data(self):
+        """Reorganise the raw data into individual weeks."""
         weeks = []
         week = []
 
-        for line in self.data:
+        for line in self._data:
             day = line[1]
             if day == calendar.day_abbr[calendar.MONDAY]:
                 weeks.append(week)
@@ -122,16 +128,18 @@ class Weeker:
         if len(week) > 0:
             weeks.append(week)
 
-        self.data = weeks
+        self._data = weeks
 
     def show_partitions(self):
-        for week in self.data:
+        """Output to console the partitioned data."""
+        for week in self._data:
             print
             for day in week:
                 print day
 
     def check_data(self):
-        data = self.data
+        """Basic sanity check of the data."""
+        data = self._data
         if len(data) is 0:
             raise RuntimeError('Data is empty')
 
@@ -144,7 +152,8 @@ class Weeker:
         print 'Number of days: {}'.format(len(data) - 1)
 
     def ingestion(self, open_file):
-        data = []
+        """Read raw data from the tabbed CSV."""
+        self._data = []
         for line in open_file:
             # get rid of newline and intertabs
             toks = line.rstrip().split('\t')
@@ -156,37 +165,40 @@ class Weeker:
 
             # get rid of 2nd item
             toks.pop(1)
-            data.append(toks)
-
-        return data
+            self._data.append(toks)
 
     def show_data(self):
-        for d in self.data:
-            print d, len(d), type(d)
+        """Output to console the ."""
+        for data in self._data:
+            print data, len(data), type(data)
 
     def run_it(self):
+        """Do an complete run."""
         args = self._args
+        sect = lambda msg: '\n{:=>80}'.format(' [ {} ]'.format(msg))
 
-        print section('Ingestion')
+        print sect('Ingestion')
+        self.ingestion(args.csv)
         print 'Input File: {}'.format(args.csv.name)
-        self.data = self.ingestion(args.csv)
-        print 'Ingested {} lines'.format(len(self.data))
+        print 'Ingested {} lines'.format(len(self._data))
         args.csv.close()
 
-        print section('Checking')
+        print sect('Checking')
         self.check_data()
 
-        print section('Extracting Metadata')
-        self.row_head = self.data.pop(0)
+        print sect('Extracting Metadata')
+        self._row_head = self._data.pop(0)
         self.get_meta()
 
-        print section('Partitioning')
+        print sect('Partitioning')
         self.partition_data()
         self.show_partitions()
 
-        if args.save:
-            print section('Saving To File')
-            self.data_to_files()
+        if not args.save:
+            return
+
+        print sect('Saving To File')
+        self.data_to_files()
 
 
 if __name__ == '__main__':
