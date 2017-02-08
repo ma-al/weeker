@@ -1,0 +1,23 @@
+# Only python 2 for now
+language: python
+python:
+    - "2.7"
+cache: pip
+
+install:
+    - pip install pytest-cov
+    - pip install pylint
+    - pip install pydocstyle
+    - pip install flake8_docstrings
+
+script:
+    - pylint snoil
+
+# Coming soon...
+#    - coverage run --source snoil -m py.test -vs
+#    - coverage report -m
+#    - flake8 snoil --count
+
+branches:
+    only:
+        - master
