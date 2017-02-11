@@ -1,0 +1,7 @@
+# packages you'll need to run code checks when developing
+pytest-cov
+pylint
+flake8_docstrings
+
+# for auto-formatting code to pep8 standards
+yapf
