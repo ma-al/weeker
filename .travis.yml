@@ -1,23 +1,29 @@
-# Only python 2 for now
 language: python
+
 python:
-    - "2.7"
+- '2.7'
+
 cache: pip
 
 install:
-    - pip install pytest-cov
-    - pip install pylint
-    - pip install pydocstyle
-    - pip install flake8_docstrings
+- pip install pytest-cov
+- pip install pylint
+- pip install pydocstyle
+- pip install flake8_docstrings
 
 script:
-    - pylint weeker
-
+- pylint weeker
 # Coming soon...
-#    - coverage run --source weeker -m py.test -vs
-#    - coverage report -m
-#    - flake8 weeker --count
+#- coverage run --source weeker -m py.test -vs
+#- coverage report -m
+#- flake8 weeker --count
 
 branches:
-    only:
-        - master
+  only:
+  - master
+
+notifications:
+  slack:
+    on_success: never
+    on_failure: change
+    secure: 2JZhz6gRS1WNShHFRQOguIO6DKInshonAFrd5AN++cpOO+ML4cu5IA5fZWzItoo97Lu/a2R9QqF1KgDHUw09t8WhhqkSfvLDWG8h8PdaZfYiWI3iYmNScwB1UvsmKJ8GOlL+OauCMFfvugIEaX3so1tYWtwvlg+i3gLiMlFJ2XHI8rJ6eRqdFfrs71ostvnS64izjv0ZlV65rnIUMjF55HM6TVXF1zn449aQpHv5xipqFcQKRDtvMvJRtm3mkVgDNICbqddXdfC4oc6BaaW++PNTkCDOBpLPbRbUbaMwvEI3xU7jnWz5DmKWQ2UlZREal3wnMdhXFviQbcDGlWQW0jtyWMSP+b8AT6paX0FuolEEPypUMAVwNf+ZT8mjLf5IPea8GnABXEcEtQXgPaT0FbskbGb9L0sPAuznh+82LgF7LHgj4TiRF5cXag1D0smxQnLFqDDO08kBf0M6GFP72Q5LvNYI6kCt4smvQa/OKO5wDm/QeV75RJgTl6r+3ny+Tj03um3a7nQdm6J4+ohD2ElyuHCmJv5bSqm5M+pcdtWksBsxHkx7ZcVsox4lT5ZHn0p2i7OQmR2RMnLFASGrHShVx62MVBnXSHmg1MrXPSUAzRDpJ+A3lQvzguqNE34Ll1f9OVWd1qsuHT4eEheWOk3Osbb1pmNDQ48qkPBIwRs=
