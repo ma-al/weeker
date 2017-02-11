@@ -1,4 +1,9 @@
-"""Converts a tabbed CSV into week-separated representation and files."""
+"""
+Weeker module.
+
+Main class converts a tabbed CSV into week-separated representation, with the
+option to output to plain-text files.
+"""
 
 import os
 import calendar
@@ -6,12 +11,18 @@ import argparse
 
 
 class Weeker(object):
-    """Converts a "CSV" that is tabbed into list of lists"""
+    """
+    Main Weeker class.
+
+    Converts a tabbed CSV into a list of lists. The lists are organised
+    according to weeks, with each week being from Monday to Sunday.
+    """
 
     _out_dir = './output'
+    sect = lambda self, msg: '\n{:=>80}'.format(' [ {} ]'.format(msg))
 
     def __init__(self):
-        """Initializes the class via parsed program arguments."""
+        """Initialize class via parsed program arguments."""
         self._month = 0
         self._etype = []
         self._data = []
@@ -89,8 +100,8 @@ class Weeker(object):
         :param list week: List of day data for the week
         :param bool reverse: True if you want to reverse the order of days
         """
-        #reverse order of days in week
         if reverse:
+            # reverse order of days in week
             week.reverse()
 
         with open(fpath, 'w') as open_file:
@@ -175,29 +186,28 @@ class Weeker(object):
     def run_it(self):
         """Do an complete run."""
         args = self._args
-        sect = lambda msg: '\n{:=>80}'.format(' [ {} ]'.format(msg))
 
-        print sect('Ingestion')
+        print self.sect('Ingestion')
         self.ingestion(args.csv)
         print 'Input File: {}'.format(args.csv.name)
         print 'Ingested {} lines'.format(len(self._data))
         args.csv.close()
 
-        print sect('Checking')
+        print self.sect('Checking')
         self.check_data()
 
-        print sect('Extracting Metadata')
+        print self.sect('Extracting Metadata')
         self._row_head = self._data.pop(0)
         self.get_meta()
 
-        print sect('Partitioning')
+        print self.sect('Partitioning')
         self.partition_data()
         self.show_partitions()
 
         if not args.save:
             return
 
-        print sect('Saving To File')
+        print self.sect('Saving To File')
         self.data_to_files()
 
 

@@ -1,0 +1,16 @@
+[flake8]
+ignore = 
+    # Love me some lambdas.
+    E731
+exclude =
+    .git,
+    __pycache__,
+    docs,
+    old,
+    build,
+    dist,
+    libs,
+    csv,
+    tests,
+    output
+max-complexity = 10
