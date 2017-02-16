@@ -10,9 +10,10 @@ Code Quality
 [![Build Status](https://travis-ci.org/ma-al/weeker.svg?branch=master)](https://travis-ci.org/ma-al/weeker)
 
 This repo uses Travis for code quality checks.
+- `py.test`
+- `coverage` (only 70% for now)
 - `pylint`
 - `flake8`
-- `py.test` and `coverage` checks coming soon
 
 Use the included `local-cqa.sh` script to run the above checks locally on your
 machine before code-pushes.
@@ -53,7 +54,10 @@ Testing
 =======
 *Work In Progress*
 
-Run the code with:
+Run the code and see output chunked into weeks using:
 ```bash
-python weeker/Weeker.py
+python weeker/weeker_class.py tests/data/example.csv
+
+# same but saving all output
+python weeker/weeker_class.py tests/data/example.csv -s
 ```
