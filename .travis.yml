@@ -12,11 +12,10 @@ install:
 - pip install flake8_docstrings
 
 script:
+- coverage run --source weeker -m py.test -vs
+- coverage report --fail-under=70 -m
 - pylint weeker
-# Coming soon...
-#- coverage run --source weeker -m py.test -vs
-#- coverage report -m
-#- flake8 weeker --count
+- flake8 weeker --count
 
 branches:
   only:
