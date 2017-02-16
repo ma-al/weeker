@@ -81,8 +81,11 @@ class Weeker(object):
         :return: Formatted newline-separated string
         :rtype: str
         """
-        event = lambda e, t: '{} {}'.format(e.rjust(7, ' '), t)
-        out = [event(self._etype[i], v) for i, v in enumerate(day[2:])]
+        time = lambda t: t.rjust(8, '0').upper()
+        event = lambda e: e.rjust(7, ' ')
+        fmt = lambda e, t: event(e) + ' ' + time(t)
+
+        out = [fmt(self._etype[i], v) for i, v in enumerate(day[2:])]
 
         date = str(day[0]).rjust(2, '0')
         dayw = day[1]
